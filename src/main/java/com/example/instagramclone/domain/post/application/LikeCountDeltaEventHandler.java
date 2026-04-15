@@ -1,5 +1,6 @@
 package com.example.instagramclone.domain.post.application;
 
+import com.example.instagramclone.core.constant.RedisKeys;
 import com.example.instagramclone.domain.post.event.LikeCountDeltaEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,7 @@ public class LikeCountDeltaEventHandler {
 
     @TransactionalEventListener
     public void handleLikeCountDelta(LikeCountDeltaEvent event) {
-        String key = "like:delta:" + event.postId();
+        String key = RedisKeys.LIKE_DELTA_PREFIX + event.postId();
         redisTemplate.opsForValue().increment(key, event.delta());
 
         log.debug("[Write-Back] postId={}, delta={}", event.postId(), event.delta());
