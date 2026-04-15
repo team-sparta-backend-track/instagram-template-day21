@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- 콘솔 로그 패턴 설정 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- [과제 1 예시답안] %yellow([%X{traceId}]) 를 추가하여 노란색 꼬리표를 달아줍니다! -->
+        <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) %magenta([%thread]) %yellow([%X{traceId}]) %cyan(%logger{36}) - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 파일 로그 패턴 설정 -->
+    <!-- 로그를 파일로 저장하고 싶다면 주석을 해제하세요. (Day 8 실습에서 다룰 예정입니다.) -->
+    <!--
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/application.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/application.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+    -->
+
+    <!-- 
+        * 애플리케이션 로그 레벨 설정은 application.yml 에서 제어합니다.
+        (예: logging.level.com.example.instagramclone: debug)
+    -->
+
+    <!-- 전체 애플리케이션의 기본 로그 레벨 -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+        <!-- <appender-ref ref="FILE" /> -->
+    </root>
+
+</configuration>

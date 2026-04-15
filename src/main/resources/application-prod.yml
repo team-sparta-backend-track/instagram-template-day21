@@ -1,0 +1,25 @@
+# Prod 프로파일 설정 (서버 배포 환경 - MySQL)
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+        show_sql: false
+
+logging:
+  level:
+    root: info
+    com:
+      example:
+        instagramclone: info
+    org:
+      hibernate:
+        SQL: info

@@ -1,0 +1,32 @@
+server:
+  port: 8090
+
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}  # .env 또는 환경변수로 override 가능, 기본값 local
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+  jpa:
+    open-in-view: false
+
+file:
+  upload:
+    location: ${user.home}/instagram-clone/uploads/
+    allowed-extensions: .jpg,.jpeg,.png,.gif,.webp,.heic # 콤마로 구분하여 작성
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY}
+  access-token-validity-time: 3600000    # 1시간 (ms)
+  refresh-token-validity-time: 604800000 # 7일 (ms)
+
+# ── Day 17: Actuator 엔드포인트 노출 설정 ──────────────────────────────────────
+# /actuator/health : Redis 연결 상태 확인 ("Redis is not available" 오류 추적)
+# /actuator/caches : 등록된 캐시 목록 + Micrometer cache.gets 히트/미스 수 확인
+# "캐시를 달았으면 히트율을 보는 것까지가 구현" — 운영 습관
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, caches

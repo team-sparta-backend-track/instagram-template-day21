@@ -1,0 +1,113 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.6'
+    id 'io.spring.dependency-management' version '1.1.6'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+    compileOnly 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    // MapStruct: annotationProcessor 순서 중요 - mapstruct-processor 가 lombok 보다 먼저 와야 함
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+    annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // Spring Security 관련 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // JWT 관련 의존성
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.7'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.7'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.7'
+
+    // spring jpa
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // 쿼리파라미터 추가 외부로그 남기기
+    implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0'
+
+    // QueryDSL 의존성 (OpenFeign fork - Hibernate 6 / Spring Boot 3.x 완전 호환)
+    // 원본 com.querydsl:5.0.0은 Hibernate 6에서 NoClassDefFoundError 발생 (사실상 유지보수 중단)
+    // io.github.openfeign.querydsl은 기존 API(com.querydsl.* 패키지명)를 유지하므로 코드 변경 불필요
+    implementation 'io.github.openfeign.querydsl:querydsl-jpa:6.10.1'
+    annotationProcessor 'io.github.openfeign.querydsl:querydsl-apt:6.10.1:jakarta'
+    annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
+    annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
+
+    implementation 'io.github.cdimascio:dotenv-java:3.0.0'
+    runtimeOnly 'com.h2database:h2'
+
+    // ── Day 17: Redis 캐싱 ──────────────────────────────────────────────────────
+    // Spring Data Redis (Lettuce 클라이언트 포함)
+    // Lettuce 는 Non-blocking I/O 기반의 기본 Redis 클라이언트다.
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // Lettuce 커넥션 풀 활성화
+    // Spring Boot + Lettuce 기본 설정은 풀이 '비활성화' 상태다.
+    // commons-pool2 가 없으면 고부하 환경에서 연결 불안정 장애가 발생할 수 있으니
+    // 로컬 개발 단계부터 풀 설정을 습관화한다.
+    implementation 'org.apache.commons:commons-pool2'
+
+    // Actuator: /actuator/caches 엔드포인트 + Micrometer cache.gets 메트릭
+    // "캐시를 달았으면 히트율을 보는 것까지가 구현" — 운영 습관
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // ── Day 19: Spring Batch ────────────────────────────────────────────────────
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
+
+    // ── Day 18: Redis 분산 락 — Redisson ────────────────────────────────────────
+    // Redisson: Redis 분산 락(RLock), 분산 컬렉션 등 고수준 추상화를 제공하는 클라이언트.
+    // SET NX EX + Lua 스크립트를 직접 구현하는 보일러플레이트를 대신 처리해 준다.
+    // redisson-spring-boot-starter는 spring.data.redis.* 설정을 자동으로 읽어
+    // RedissonClient 빈을 등록하므로 별도 Config 클래스가 필요 없다.
+    implementation 'org.redisson:redisson-spring-boot-starter:3.27.2'
+
+    // ── Day 17 Homework: Testcontainers Redis 통합 테스트 ──────────────────────
+    // EmbeddedRedis 계열 라이브러리는 사실상 deprecated → Testcontainers 로 습관 잡기
+    // @SpringBootTest + @Testcontainers + @DynamicPropertySource 조합으로
+    // 실제 Redis 컨테이너를 띄워 캐시 히트/미스를 검증한다.
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    // GenericContainer 로 redis:8-alpine 컨테이너를 직접 띄울 수 있어 별도 모듈 불필요
+    // (com.redis:testcontainers-redis 를 쓰고 싶다면 버전을 명시해 추가해도 된다)
+
+    // 레거시 관련 코드 주석처리 (JSP, Mybatis)
+    // implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+    // implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
+    // implementation 'jakarta.servlet:jakarta.servlet-api'
+    // implementation 'jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api'
+    // implementation 'org.glassfish.web:jakarta.servlet.jsp.jstl'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+

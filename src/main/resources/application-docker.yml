@@ -1,0 +1,52 @@
+# ================================================================
+# MySQL 프로파일 (Day 20 벤치마크 시연용)
+#
+# [사용법]
+#   1. docker compose up mysql redis -d
+#   2. IntelliJ에서 SPRING_PROFILES_ACTIVE=mysql 로 앱 실행
+#   3. GET /api/benchmark/offset-vs-cursor 호출
+#
+# [왜 MySQL인가?]
+#   H2 인메모리 DB는 모든 데이터가 JVM 힙에 있어서
+#   OFFSET 490,000이든 0이든 속도 차이가 없다.
+#   Offset 성능 문제는 디스크 I/O가 있는 실제 DB에서만 체감된다.
+# ================================================================
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://mysql:3306/instagram?rewriteBatchedStatements=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
+    username: instagram
+    password: instagram
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: false
+        show_sql: false
+    defer-datasource-initialization: true
+
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always   # MySQL에서 배치 메타 테이블 자동 생성
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 1
+
+logging:
+  level:
+    root: info
+    com:
+      example:
+        instagramclone: debug

@@ -1,0 +1,81 @@
+version: '3.8'
+
+# ================================================================
+# Day 17 - Redis + Spring Boot 통합 실행 환경
+#
+# [사용법]
+#   전체 기동  : docker compose up -d --build
+#   상태 확인  : docker compose ps
+#   로그 확인  : docker compose logs -f app
+#   종료       : docker compose down
+#   볼륨까지 삭제: docker compose down -v
+#
+# [두 가지 실행 패턴]
+#   패턴 A - Compose 풀 스택: redis + app 둘 다 Compose로 기동
+#   패턴 B - redis만 Compose, app은 IntelliJ에서 직접 실행
+#             → SPRING_PROFILES_ACTIVE=local 로 두면 Redis host = localhost
+#
+# ================================================================
+
+services:
+
+  # ── MySQL 서버 (Day 20 벤치마크 시연용) ──────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: instagram-clone-mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: instagram
+      MYSQL_USER: instagram
+      MYSQL_PASSWORD: instagram
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ── Redis 서버 ────────────────────────────────────────────────
+  redis:
+    image: redis:8-alpine          # 2026년 기준 최신 안정판 (캐시 기능은 버전 무관)
+    container_name: instagram-clone-redis
+    ports:
+      - "6379:6379"                # 호스트:컨테이너 - IntelliJ에서도 localhost:6379 로 접근 가능
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]   # PONG 이 오면 healthy
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── Spring Boot 앱 (패턴 A 풀스택 시 사용) ─────────────────────
+  # 패턴 B에서는 이 서비스를 주석 처리하고 앱은 IDE에서 기동한다.
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile       # 프로젝트 루트의 Dockerfile 참조
+    container_name: instagram-clone-app
+    ports:
+      - "8090:8090"
+    environment:
+      # Compose 네트워크 안에서는 서비스 이름(redis)이 곧 호스트명이다.
+      # IDE에서 직접 실행할 때와 달리 localhost가 아니라 redis로 지정해야 한다.
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATA_REDIS_HOST=redis   # application-docker.yml 의 ${SPRING_DATA_REDIS_HOST}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    depends_on:
+      mysql:
+        condition: service_healthy     # MySQL 이 ready 상태일 때까지 앱 기동 대기
+      redis:
+        condition: service_healthy     # Redis 가 PONG 응답할 때까지 앱 기동 대기
+    volumes:
+      # 업로드 파일을 컨테이너 밖(호스트)에 보관해 재시작 시에도 유지된다.
+      - ${HOME}/instagram-clone/uploads:/root/instagram-clone/uploads
+
+volumes:
+  mysql-data:

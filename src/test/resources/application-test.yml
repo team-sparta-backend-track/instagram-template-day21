@@ -1,0 +1,34 @@
+# Test 프로파일 설정 (테스트 환경 - H2 인메모리 DB)
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;MODE=MySQL
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: false
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: false
+        show_sql: false
+    defer-datasource-initialization: true
+
+# JWT: ${JWT_SECRET_KEY} 플레이스홀더를 테스트 전용 고정값으로 오버라이드
+# @SpringBootTest는 main()을 호출하지 않아 DotenvInitializer가 등록되지 않으므로
+# application-test.yml에서 직접 해결. 이 키는 테스트 전용이므로 실제 시크릿이 아닙니다.
+jwt:
+  secret-key: VGhpc0lzQVN1cGVyU2VjcmV0S2V5Rm9ySnd0VG9rZW5HZW5lcmF0aW9u
+  access-token-validity-time: 3600000
+  refresh-token-validity-time: 604800000
+
+logging:
+  level:
+    root: warn
+    com:
+      example:
+        instagramclone: info
